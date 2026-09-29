@@ -1,0 +1,259 @@
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils.DataSource;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Discretize;
+import weka.filters.unsupervised.instance.Resample;
+import weka.associations.Apriori;
+
+public class WekaAprioriExperiment {
+
+    // Load ARFF dataset
+    public static Instances loadDataset(String fileName) throws Exception {
+        DataSource source = new DataSource(fileName);
+        Instances data = source.getDataSet();
+
+        System.out.println("\nLoaded Dataset: " + fileName);
+        System.out.println("Instances: " + data.numInstances());
+        System.out.println("Attributes: " + data.numAttributes());
+
+        return data;
+    }
+
+    // Discretization
+    public static Instances discretize(Instances data, int bins)
+            throws Exception {
+
+        Discretize filter = new Discretize();
+        filter.setBins(bins);
+        filter.setInputFormat(data);
+
+        Instances result = Filter.useFilter(data, filter);
+
+        System.out.println("\n--- Discretization ---");
+        System.out.println("Bins: " + bins);
+        System.out.println("Instances after discretization: "
+                + result.numInstances());
+
+        return result;
+    }
+
+    // Resampling
+    public static Instances resample(Instances data, double percentage)
+            throws Exception {
+
+        Resample filter = new Resample();
+        filter.setSampleSizePercent(percentage);
+        filter.setRandomSeed(1);
+        filter.setInputFormat(data);
+
+        Instances result = Filter.useFilter(data, filter);
+
+        System.out.println("\n--- Resampling ---");
+        System.out.println("Sample percentage: " + percentage + "%");
+        System.out.println("Instances after resampling: "
+                + result.numInstances());
+
+        return result;
+    }
+
+    // Apriori
+    public static void runApriori(Instances data,
+                                  double support,
+                                  double confidence,
+                                  int numberOfRules)
+            throws Exception {
+
+        Apriori apriori = new Apriori();
+
+        // Number of rules
+        apriori.setNumRules(numberOfRules);
+
+        // Minimum support
+        apriori.setLowerBoundMinSupport(support);
+
+        // Minimum confidence
+        apriori.setMinMetric(confidence);
+
+        apriori.buildAssociations(data);
+
+        System.out.println("\n======================================");
+        System.out.println("APRIORI ASSOCIATION RULES");
+        System.out.println("======================================");
+
+        System.out.println("Minimum Support : " + support);
+        System.out.println("Minimum Confidence : " + confidence);
+        System.out.println("Number of Rules : " + numberOfRules);
+
+        System.out.println("\n" + apriori);
+    }
+
+    public static void main(String[] args) {
+
+        try {
+
+            // -----------------------------------------
+            // TASK 1
+            // Explore Discretization on IRIS
+            // -----------------------------------------
+
+            System.out.println("\n\n========== TASK 1: IRIS ==========");
+
+            Instances iris =
+                    loadDataset("iris.arff");
+
+            Instances irisDiscretized =
+                    discretize(iris, 10);
+
+
+            // -----------------------------------------
+            // TASK 1
+            // Explore Resampling on GLASS
+            // -----------------------------------------
+
+            System.out.println("\n\n========== TASK 1: GLASS ==========");
+
+            Instances glass =
+                    loadDataset("glass.arff");
+
+            Instances glassResampled =
+                    resample(glass, 70);
+
+
+            // -----------------------------------------
+            // TASK 2
+            // WEATHER + APRIORI
+            // -----------------------------------------
+
+            System.out.println(
+                    "\n\n========== TASK 2: WEATHER ==========");
+
+            Instances weather =
+                    loadDataset("weather.nominal.arff");
+
+
+            // Run 1
+            System.out.println("\n--- WEATHER RUN 1 ---");
+
+            runApriori(
+                    weather,
+                    0.10,
+                    0.90,
+                    10
+            );
+
+
+            // Run 2
+            System.out.println("\n--- WEATHER RUN 2 ---");
+
+            runApriori(
+                    weather,
+                    0.20,
+                    0.90,
+                    10
+            );
+
+
+            // Run 3
+            System.out.println("\n--- WEATHER RUN 3 ---");
+
+            runApriori(
+                    weather,
+                    0.10,
+                    0.80,
+                    10
+            );
+
+
+            // Run 4
+            System.out.println("\n--- WEATHER RUN 4 ---");
+
+            runApriori(
+                    weather,
+                    0.20,
+                    0.80,
+                    10
+            );
+
+
+            // -----------------------------------------
+            // TASK 3
+            // IRIS BEFORE DISCRETIZATION
+            // -----------------------------------------
+
+            System.out.println(
+                    "\n\n========== TASK 3: IRIS BEFORE DISCRETIZATION ==========");
+
+            runApriori(
+                    iris,
+                    0.10,
+                    0.80,
+                    10
+            );
+
+
+            // -----------------------------------------
+            // TASK 3
+            // IRIS AFTER DISCRETIZATION
+            // -----------------------------------------
+
+            System.out.println(
+                    "\n\n========== TASK 3: IRIS AFTER DISCRETIZATION ==========");
+
+            runApriori(
+                    irisDiscretized,
+                    0.10,
+                    0.80,
+                    10
+            );
+
+
+            // -----------------------------------------
+            // TASK 4
+            // GLASS: RESAMPLE
+            // -----------------------------------------
+
+            System.out.println(
+                    "\n\n========== TASK 4: GLASS RESAMPLED ==========");
+
+            Instances glassResampledDiscretized =
+                    discretize(glassResampled, 10);
+
+
+            // -----------------------------------------
+            // TASK 4
+            // GLASS: RESAMPLE + DISCRETIZE + APRIORI
+            // -----------------------------------------
+
+            System.out.println(
+                    "\n\n========== TASK 4: GLASS APRIORI ==========");
+
+            runApriori(
+                    glassResampledDiscretized,
+                    0.10,
+                    0.80,
+                    10
+            );
+
+
+            // -----------------------------------------
+            // FINAL MESSAGE
+            // -----------------------------------------
+
+            System.out.println(
+                    "\n\n========== EXPERIMENT COMPLETED ==========");
+
+            System.out.println(
+                    "Discretization, Resampling and Apriori");
+            System.out.println(
+                    "were successfully performed.");
+
+        }
+        catch (Exception e) {
+
+            System.out.println(
+                    "\nERROR OCCURRED:");
+
+            e.printStackTrace();
+        }
+    }
+}
